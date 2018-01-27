@@ -10,7 +10,12 @@
 # 
 # Outlier Detection- Ensemble unsupervised learning method - Isolation Forest
 # 
-# The isolation algorithm is an unsupervised machine learning method used to detect abnormal anomalies in data such as outliers. This is once again a randomized & recursive partition of the training data in a tree structure. The number of sub samples and tree size is specified and tuned appropriately. The distance to the outlier is averaged calculating an anomaly detection score: 1 = outlier 0 = close to zero are normal data.
+# The isolation algorithm is an unsupervised machine learning method used
+#   to detect abnormal anomalies in data such as outliers.
+#   This is once again a randomized & recursive partition of the training data in a tree structure. T
+#   he number of sub samples and tree size is specified and tuned appropriately.
+#   The distance to the outlier is averaged calculating an anomaly detection score:
+#   1 = outlier 0 = close to zero are normal data.
 # 
 
 # ### 1. Load Data & Libraries
@@ -24,7 +29,7 @@ from sklearn import preprocessing
 from sklearn.metrics import log_loss, auc, roc_auc_score
 from sklearn.preprocessing import LabelEncoder
 from sklearn import metrics
-df = pd.read_csv("C:\\data\\claims.csv")
+df = pd.read_csv("data/train.csv")
 df.head(1)
 
 
@@ -58,12 +63,13 @@ df.tail(3)
 
 # In[5]:
 
-X = df.drop(['ID'],['target'], axis = 1)
+X = df.drop(['ID','target'], axis = 1)
 Y = df.target.values
 #Cross - Validation - split the data into 70% training and the remainder for testing the model
 from sklearn.cross_validation import train_test_split
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.30, random_state=0)
-
+X_train = X_train.fillna(X_train.mean())
+X_test = X_test.fillna(X_train.mean())
 
 # ### 4. Build Isolation Forest
 
@@ -77,24 +83,23 @@ isomodel = IsolationForest(max_samples = 256, random_state=rs)
 isomodelfit = isomodel.fit(X_train)#fit the ensemble model and build the trees
 y_pred_train = isomodel.predict(X_train)
 y_pred_test = isomodel.predict(X_test)#find average depth
-y_pred_test
+print y_pred_test
 
 
 # In[ ]:
 
 #plot the results of the isolation forest
-import plotly.plotly as py
-import plotly.graph_objs as go
-xx, yy = np.meshgrid(np.linspace(-5, 5, 50), np.linspace(-5, 5, 50))
-Z = isomodel.decision_function(np.c_[xx.ravel(), yy.ravel()])
-Z = Z.reshape(xx.shape)
+from matplotlib import pyplot as plt
+# xx, yy = np.meshgrid(np.linspace(-5, 5, 50), np.linspace(-5, 5, 50))
+# Z = isomodel.decision_function(np.c_[xx.ravel(), yy.ravel()])
+# Z = Z.reshape(xx.shape)
 
-plt.title("Isolation Forest Outlier Detection")
-plt.contourf(xx, yy, Z, cmap=plt.cm.Blues_r)
+# plt.title("Isolation Forest Outlier Detection")
+# plt.contourf(xx, yy, Z, cmap=plt.cm.Blues_r)
 
-b1 = plt.scatter(X_train[:, 0], X_train[:, 1], c='white')
-b2 = plt.scatter(X_train[:, 0], X_train[:, 1], c='green')
-c = plt.scatter(y_pred_outliers[:, 0], y_pred_outliers[:, 1], c='red')
+b1 = plt.scatter(X_train.ix[:, 0], X_train.ix[:, 1], c='white')
+b2 = plt.scatter(X_train.ix[:, 0], X_train.ix[:, 1], c='green')
+c = plt.scatter(y_pred_test.ix[:, 0], y_pred_test.ix[:, 1], c='red')
 
 plt.axis('tight')
 plt.xlim((-5, 5))
